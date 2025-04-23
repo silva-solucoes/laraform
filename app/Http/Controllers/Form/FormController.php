@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Form;
 
-use Auth;
-use App\Form;
-use Validator;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Form;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -32,7 +32,7 @@ class FormController extends Controller
 
         if ($unclosed_forms_count == $max_no_user_unclosed_forms) {
             session()->flash('index', [
-                'status' => 'warning', 'message' => "You have {$max_no_user_unclosed_forms} unclosed forms. Please resolve them before you can create more forms",
+                'status' => 'warning', 'message' => "Você tem {$max_no_user_unclosed_forms} formulários não fechados. Por favor, resolva-os antes de criar mais formulários",
             ]);
 
             return redirect()->route('forms.index');
@@ -51,7 +51,7 @@ class FormController extends Controller
             ->count();
 
         $not_allowed = ($unclosed_forms_count == $max_no_user_unclosed_forms);
-        abort_if($not_allowed, 403, "You have {$max_no_user_unclosed_forms} unclosed forms. Please resolve them before you can create more forms");
+        abort_if($not_allowed, 403, "Você tem {$max_no_user_unclosed_forms} formulários não fechados. Por favor, resolva-os antes de criar mais formulários");
 
         $this->validate($request, [
             'title' => 'required|string|min:3|max:190',
@@ -117,7 +117,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  'Form is invalid',
+                    'error' =>  'Formulário inválido',
                 ]);
             }
 
@@ -127,7 +127,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_allowed',
-                    'error' =>  'Form is invalid'
+                    'error' =>  'Formulário inválido'
                 ]);
             }
 
@@ -168,7 +168,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  'Invalid request made. Please refresh the page'
+                    'error' =>  'Requisição inválida. Por favor, atualize a página'
                 ]);
             }
 
@@ -239,7 +239,7 @@ class FormController extends Controller
 
         session()->flash('show', [
             'status' => 'success',
-            'message' => 'Your form is now open to receive responses. You can now share it with other people.',
+            'message' => 'Seu formulário está agora aberto para receber respostas. Você pode compartilhá-lo com outras pessoas.',
         ]);
 
         return redirect()->route('forms.show', $form->code);
@@ -259,7 +259,7 @@ class FormController extends Controller
 
         session()->flash('show', [
             'status' => 'success',
-            'message' => 'The form has been successfully closed. You can reopen it if you want to.',
+            'message' => 'O formulário foi fechado com sucesso. Você pode reabri-lo se desejar.',
         ]);
 
         return redirect()->route('forms.show', $form->code);
@@ -283,7 +283,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_found',
-                    'error' => 'Form is invalid'
+                    'error' => 'Formulário inválido'
                 ]);
             }
 
@@ -291,7 +291,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_allowed',
-                    'error' => 'Form cannot be shared with others as it is not open yet.'
+                    'error' => 'O formulário não pode ser compartilhado com outros, pois ainda não está aberto.'
                 ]);
             }
 
@@ -343,7 +343,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_found',
-                    'error' => 'Form is invalid'
+                    'error' => 'Formulário inválido'
                 ]);
             }
 
@@ -351,7 +351,7 @@ class FormController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_allowed',
-                    'error' => 'Form cannot be deleted as it is still open. Close it first.'
+                    'error' => 'O formulário não pode ser excluído, pois ainda está aberto. Feche-o primeiro.'
                 ]);
             }
 
@@ -373,7 +373,7 @@ class FormController extends Controller
 
         session()->flash('index', [
             'status' => 'success',
-            'message' => 'Form has been deleted'
+            'message' => 'Formulário foi excluído'
         ]);
 
         return redirect()->route('forms.index');

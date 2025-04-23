@@ -2,12 +2,13 @@
 
 namespace App;
 
-use Mail;
+use Illuminate\Support\Facades\Mail;
 use App\Mail\ShareFormLinkMail;
 use App\Mail\FormCollaborationMail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Iatstuti\Database\Support\CascadeSoftDeletes;
+use Dyrynda\Database\Support\CascadeSoftDeletes;
+use Illuminate\Support\Str;
 
 class Form extends Model
 {
@@ -60,7 +61,7 @@ class Form extends Model
     public function generateCode()
     {
         do {
-            $this->code = str_random(32);
+            $this->code = Str::random(32);
         } while (static::where('code', $this->code)->exists());
     }
 

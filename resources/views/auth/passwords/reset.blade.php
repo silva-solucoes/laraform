@@ -13,11 +13,11 @@
             <div class="panel panel-body">
                 <div class="text-center">
                     <div class="icon-object border-warning text-warning"><i class="icon-reset"></i></div>
-                    <h5 class="content-group">Password Reset <small class="display-block">Go ahead to reset your password</small></h5>
+                    <h5 class="content-group">Redefinição de senha <small class="display-block">Vá em frente para redefinir sua senha</small></h5>
                 </div>
 
                 <div class="form-group has-feedback{{ $errors->has('email') ? ' has-error' : '' }}">
-                    <input type="email" class="form-control" id="email" name="email" value="{{ $email || old('email') }}" placeholder="Email Address" required>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ $email || old('email') }}" placeholder="Digite seu e-mail" required>
                     <div class="form-control-feedback">
                         <i class="icon-mail5 text-muted"></i>
                     </div>
@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="form-group has-feedback{{ $errors->has('password') ? ' has-error' : '' }}">
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your new password" required>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Digite sua nova senha" required>
                     <div class="form-control-feedback">
                         <i class="icon-lock2 text-muted"></i>
                     </div>
@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="form-group has-feedback{{ $errors->has('password') ? ' has-error' : '' }}">
-                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Re-enter password" required>
+                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Digite novamente a senha" required>
                     <div class="form-control-feedback">
                         <i class="icon-lock2 text-muted"></i>
                     </div>
@@ -46,7 +46,7 @@
                     @endif
                 </div>
 
-                <button type="submit" class="btn bg-success btn-block">Reset Password <i class="icon-arrow-right14 position-right"></i></button>
+                <button type="submit" class="btn bg-success btn-block">Redefinir senha <i class="icon-arrow-right14 position-right"></i></button>
             </div>
         </div>
     </div>

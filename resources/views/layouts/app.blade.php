@@ -46,13 +46,13 @@
 
                 <li class="dropdown dropdown-user">
                     <a class="dropdown-toggle" data-toggle="dropdown">
-                        <span class="greeting">Morning</span>, {{ $current_user->full_name }}
+                        <span class="greeting">Manhã</span>, {{ $current_user->full_name }}
                         <i class="caret"></i>
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-right">
-                        <li><a href="{{ route('profile.index') }}"><i class="icon-user-plus"></i> My profile</a></li>
-                        <li><a href="{{ route('logout') }}" data-method="post"><i class="icon-switch2"></i> Logout</a></li>
+                        <li><a href="{{ route('profile.index') }}"><i class="icon-user-plus"></i> Meu perfil</a></li>
+                        <li><a href="{{ route('logout') }}" data-method="post"><i class="icon-switch2"></i> Sair</a></li>
                     </ul>
                 </li>
             </ul>

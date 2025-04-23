@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Form;
 
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use App\Form;
-use Validator;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use App\FormResponse;
 use App\FieldResponse;
 use Illuminate\Http\Request;
@@ -16,25 +17,25 @@ class ResponseController extends Controller
 {
     public function index(Form $form)
     {
-        $current_user = Auth::user();
-        $not_allowed = ($form->user_id !== $current_user->id && !$current_user->isFormCollaborator($form->id));
-        abort_if($not_allowed, 404);
+        $usuario_atual = Auth::user();
+        $nao_permitido = ($form->user_id !== $usuario_atual->id && !$usuario_atual->isFormCollaborator($form->id));
+        abort_if($nao_permitido, 404);
 
-        $valid_request_queries = ['summary', 'individual'];
-        $query = strtolower(request()->query('type', 'summary'));
+        $consultas_validas = ['resumo', 'individual'];
+        $consulta = strtolower(request()->query('type', 'resumo'));
 
-        abort_if(!in_array($query, $valid_request_queries), 404);
+        abort_if(!in_array($consulta, $consultas_validas), 404);
 
-        if ($query === 'summary') {
-            $responses = [];
+        if ($consulta === 'resumo') {
+            $respostas = [];
             $form->load('fields.responses', 'collaborationUsers', 'availability');
         } else {
             $form->load('collaborationUsers');
 
-            $responses = $form->responses()->has('fieldResponses')->with('fieldResponses.formField')->paginate(1, ['*'], 'response');
+            $respostas = $form->responses()->has('fieldResponses')->with('fieldResponses.formField')->paginate(1, ['*'], 'response');
         }
 
-        return view('forms.response.index', compact('form', 'query', 'responses'));
+        return view('forms.response.index', compact('form', 'consulta', 'respostas'));
     }
 
     public function store(Request $request, $form)
@@ -46,106 +47,104 @@ class ResponseController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_allowed',
-                    'error' => (!$form) ? 'Form is invalid' : 'Form is not accessible',
+                    'error' => (!$form) ? 'Formulário inválido' : 'Formulário não acessível',
                 ]);
             }
 
-            $form_fields = $form->fields()->filled()->select(['id', 'attribute', 'required'])->get();
-            $inputs = [];
-            $validation_rules = [];
-            $validation_messages = [];
+            $campos_do_formulario = $form->fields()->filled()->select(['id', 'attribute', 'required'])->get();
+            $entradas = [];
+            $regras_de_validacao = [];
+            $mensagens_de_validacao = [];
 
-            foreach ($form_fields as $field) {
-                $attribute = str_replace('.', '_', $field->attribute);
-                $input_data = [
-                    'question' => $field->question,
-                    'value' => array_get($request->all(), $attribute),
-                    'required' => $field->required,
-                    'options' => $field->options,
-                    'template' => str_replace('-', '_', $field->template)
+            foreach ($campos_do_formulario as $campo) {
+                $atributo = str_replace('.', '_', $campo->attribute);
+                $dados_entrada = [
+                    'pergunta' => $campo->question,
+                    'valor' => array_get($request->all(), $atributo),
+                    'required' => $campo->required,
+                    'opcoes' => $campo->options,
+                    'template' => str_replace('-', '_', $campo->template)
                 ];
 
-                $inputs[$attribute] = $input_data;
+                $entradas[$atributo] = $dados_entrada;
             }
 
-            foreach ($inputs as $attribute => $input) {
-                $rule = ($input['required']) ? 'required|' : 'nullable|';
-                $messages = ($input['required']) ? ['required' => 'All questions with * are required'] : [];
+            foreach ($entradas as $atributo => $entrada) {
+                $regra = ($entrada['required']) ? 'required|' : 'nullable|';
+                $mensagens = ($entrada['required']) ? ['required' => 'Todas as perguntas com * são obrigatórias'] : [];
 
-                switch ($input['template']) {
+                switch ($entrada['template']) {
                     case 'short_answer':
-                        $rule .= 'string|min:3|max:255';
-                        $messages['min'] = "Answer to: \"{$input['question']}\" must be at least 3 characters";
-                        $messages['max'] = "Answer to: \"{$input['question']}\" must not be greater than 255 characters";;
+                        $regra .= 'string|min:3|max:255';
+                        $mensagens['min'] = "A resposta para: \"{$entrada['pergunta']}\" deve ter pelo menos 3 caracteres";
+                        $mensagens['max'] = "A resposta para: \"{$entrada['pergunta']}\" não pode ter mais de 255 caracteres";
                         break;
                     case 'long_answer':
-                        $rule .= 'string|min_words:3|max:60000';
-                        $message['min_words'] = "Answer to: \"{$input['question']}\" must be at least 3 words long";
-                        $message['max'] = "Answer to: \"{$input['question']}\" must not be greater than :max characters";
+                        $regra .= 'string|min_words:3|max:60000';
+                        $mensagem['min_words'] = "A resposta para: \"{$entrada['pergunta']}\" deve ter pelo menos 3 palavras";
+                        $mensagem['max'] = "A resposta para: \"{$entrada['pergunta']}\" não pode ter mais de :max caracteres";
                         break;
                     case 'checkboxes':
-                        //For check box array
-                        $validation_rules[$attribute] = "{$rule}max:" . count($input['options']);
-                        $checkbox_message = ['max' => "Selected Option(s) to: \"{$input['question']}\" is invalid"];
-                        $validation_messages[$attribute] = array_merge($messages, $checkbox_message);
+                        $regras_de_validacao[$atributo] = "{$regra}max:" . count($entrada['opcoes']);
+                        $mensagem_checkbox = ['max' => "Opção(ões) selecionada(s) para: \"{$entrada['pergunta']}\" é inválida"];
+                        $mensagens_de_validacao[$atributo] = array_merge($mensagens, $mensagem_checkbox);
 
-                        //For individual value
-                        $rule .= 'string|in:'. implode(',', $input['options']);
-                        $messages['in'] = "Selected Option(s) to: \"{$input['question']}\" is invalid";
+                        $regra .= 'string|in:' . implode(',', $entrada['opcoes']);
+                        $mensagens['in'] = "Opção(ões) selecionada(s) para: \"{$entrada['pergunta']}\" é inválida";
                         break;
                     case 'multiple_choices':
                     case 'drop_down':
-                        $rule .= 'string|in:'. implode(',', $input['options']);
-                        $messages['in'] = "Selected Option to: \"{$input['question']}\" is invalid";
+                        $regra .= 'string|in:' . implode(',', $entrada['opcoes']);
+                        $mensagens['in'] = "Opção selecionada para: \"{$entrada['pergunta']}\" é inválida";
                         break;
                     case 'date':
-                        $rule .= 'string|date';
-                        $messages['date'] = "Answer to: \"{$input['question']}\" is not a valid date";
+                        $regra .= 'string|date';
+                        $mensagens['date'] = "A resposta para: \"{$entrada['pergunta']}\" não é uma data válida";
                         break;
                     case 'time':
-                        $rule .= 'string|date_format:H:i';
-                        $messages['date_format'] = "Answer to: \"{$input['question']}\" is not a valid time";
+                        $regra .= 'string|date_format:H:i';
+                        $mensagens['date_format'] = "A resposta para: \"{$entrada['pergunta']}\" não é um horário válido";
                         break;
                     case 'linear_scale':
-                        $rule .= "integer|between:{$input['options']['min']['value']},{$input['options']['max']['value']}";
-                        $messages['between'] = "Answer to: \"{$input['question']}\" is invalid";
+                        $regra .= "integer|between:{$entrada['opcoes']['min']['value']},{$entrada['opcoes']['max']['value']}";
+                        $mensagens['between'] = "A resposta para: \"{$entrada['pergunta']}\" é inválida";
                         break;
                 }
 
-                $new_attribute = ($input['template'] === 'checkboxes') ? "{$attribute}.*" : $attribute;
-                $validation_rules[$new_attribute] = $rule;
-                $validation_messages[$new_attribute] = $messages;
+                $novo_atributo = ($entrada['template'] === 'checkboxes') ? "{$atributo}.*" : $atributo;
+                $regras_de_validacao[$novo_atributo] = $regra;
+                $mensagens_de_validacao[$novo_atributo] = $mensagens;
             }
 
-            $validator = \Validator::make($request->except('_token'), $validation_rules, array_dot($validation_messages));
+            $validador = \Validator::make($request->except('_token'), $regras_de_validacao, array_dot($mensagens_de_validacao));
 
-            if ($validator->fails()) {
-                $errors = collect($validator->errors())->flatten();
+            if ($validador->fails()) {
+                $erros = collect($validador->errors())->flatten();
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  $errors->first()
+                    'error' =>  $erros->first()
                 ]);
             }
 
-            $response = new FormResponse([
+            $resposta = new FormResponse([
                 'respondent_ip' => (string) $request->ip(),
                 'respondent_user_agent' => (string) $request->header('user-agent')
             ]);
 
-            $response->generateResponseCode();
-            $form->responses()->save($response);
+            $resposta->generateResponseCode();
+            $form->responses()->save($resposta);
 
-            foreach ($form_fields as $field) {
-                $attribute = str_replace('.', '_', $field->attribute);
-                $value = $request->input($attribute);
+            foreach ($campos_do_formulario as $campo) {
+                $atributo = str_replace('.', '_', $campo->attribute);
+                $valor = $request->input($atributo);
 
-                $field_response = new FieldResponse([
-                    'form_response_id' => $response->id,
-                    'answer' => is_array($value) ? json_encode($value) : $value,
+                $resposta_de_campo = new FieldResponse([
+                    'form_response_id' => $resposta->id,
+                    'answer' => is_array($valor) ? json_encode($valor) : $valor,
                 ]);
 
-                $field->responses()->save($field_response);
+                $campo->responses()->save($resposta_de_campo);
             }
 
             return response()->json([
@@ -156,28 +155,36 @@ class ResponseController extends Controller
 
     public function export(Form $form)
     {
-        $current_user = Auth::user();
-        $not_allowed = ($form->user_id !== $current_user->id && !$current_user->isFormCollaborator($form->id));
-        abort_if($not_allowed, 404);
+        $usuario_atual = Auth::user();
+        $nao_permitido = ($form->user_id !== $usuario_atual->id && !$usuario_atual->isFormCollaborator($form->id));
+        abort_if($nao_permitido, 404);
 
-        $not_allowed = $form->responses()->doesntExist();
-        abort_if($not_allowed, 404);
+        $nao_permitido = $form->responses()->doesntExist();
+        abort_if($nao_permitido, 404);
 
-        $filename = str_slug($form->title) . '.xlsx';
-        return Excel::download(new FormResponseExport($form), $filename);
+        // Define o nome do arquivo para exportação
+        $nome_arquivo = Str::slug($form->title) . '.xlsx';
+        return Excel::download(new FormResponseExport($form), $nome_arquivo);
     }
 
-    public function destroy(Form $form, FormResponse $response)
+    public function destroy(Form $form, FormResponse $resposta)
     {
-        $current_user = Auth::user();
-        $user_not_allowed = ($form->user_id !== $current_user->id && !$current_user->isFormCollaborator($form->id));
-        $not_allowed = ($user_not_allowed || $form->id !== $response->form_id);
-        abort_if($not_allowed, 403);
+        $usuario_atual = Auth::user();
 
-        $response->delete();
+        // Verifica se o usuário é o dono ou colaborador do formulário
+        $usuario_nao_permitido = ($form->user_id !== $usuario_atual->id && !$usuario_atual->formCollaborators->contains($form));
+
+        // Verifica se o formulário da resposta é o mesmo
+        $nao_permitido = ($usuario_nao_permitido || $form->id !== $resposta->form_id);
+
+        // Se for não permitido, aborta com código 403
+        abort_if($nao_permitido, 403);
+
+        $resposta->delete();
 
         session()->flash('index', [
-            'status' => 'success', 'message' => 'Response has been deleted successfully.'
+            'status' => 'success',
+            'message' => 'A resposta foi excluída com sucesso.'
         ]);
 
         return redirect()->route('forms.responses.index', [$form->code, 'type' => 'individual']);
@@ -185,21 +192,25 @@ class ResponseController extends Controller
 
     public function destroyAll(Form $form)
     {
-        $current_user = Auth::user();
-        $not_allowed = ($form->user_id !== $current_user->id && !$current_user->isFormCollaborator($form->id));
-        abort_if($not_allowed, 403);
+        $usuario_atual = Auth::user();
 
-        $responses = $form->responses()->get();
+        // Verifica se o usuário atual é o dono ou colaborador do formulário
+        $nao_permitido = ($form->user_id !== $usuario_atual->id && !$usuario_atual->formCollaborators->contains($form));
+
+        abort_if($nao_permitido, 403);
+
+        $respostas = $form->responses()->get();
         abort_if(!$form->has('responses')->exists(), 403);
 
-        $form->responses()->chunk(100, function ($responses) {
-            foreach ($responses as $response) {
-                $response->delete();
+        $form->responses()->chunk(100, function ($respostas) {
+            foreach ($respostas as $resposta) {
+                $resposta->delete();
             }
         });
 
         session()->flash('index', [
-            'status' => 'success', 'message' => 'All Responses for this form have been deleted successfully'
+            'status' => 'success',
+            'message' => 'Todas as respostas deste formulário foram excluídas com sucesso'
         ]);
 
         return redirect()->route('forms.responses.index', $form->code);

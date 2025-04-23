@@ -11,7 +11,7 @@ $(function() {
 		var	item = $(this).data('item');
 		var message = $(this).data('message');
 
-		message = (message && message.length) ? message : 'Are you sure you want to delete the ' + item + '?';
+		message = (message && message.length) ? message : 'Tem certeza de que deseja excluir o ' + item + '?';
 
 		bootbox.confirm({
 			message: message,
@@ -104,7 +104,7 @@ $(function() {
 			parent_row = $initiator.closest('tr');
 
 		bootbox.confirm({
-			message: 'Are you sure you want to delete this ' + $('form.action-by-ajax').attr('id') + '?',
+			message: 'Tem certeza de que deseja excluir ' + $('form.action-by-ajax').attr('id') + '?',
 		    buttons: {
 		        confirm: {
 		            label: 'Yes',
@@ -160,11 +160,11 @@ $(function() {
 		var curHr = today.getHours()
 
 		if (curHr < 12) {
-		  return 'Good Morning';
+		  return 'Bom dia';
 		} else if (curHr < 18) {
-		  return 'Good Afternoon';
+		  return 'Boa tarde';
 		} else {
-		  return 'Good Evening';
+		  return 'Boa noite';
 		}
 	}
 });

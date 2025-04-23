@@ -4,11 +4,10 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Iatstuti\Database\Support\CascadeSoftDeletes;
 
 class FormField extends Model
 {
-    use SoftDeletes, CascadeSoftDeletes;
+    use SoftDeletes;
 
     protected $fillable = [
         'form_id', 'template', 'question', 'required', 'options', 'attribute', 'filled'
@@ -20,7 +19,7 @@ class FormField extends Model
         'options' => 'array',
     ];
 
-    protected $cascadeDeletes = ['responses'];
+    // Removido: protected $cascadeDeletes = ['responses'];
 
     public function scopeFilled($query)
     {

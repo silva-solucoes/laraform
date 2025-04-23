@@ -1,7 +1,7 @@
 @php
     $action = ($type == 'edit') ? route('forms.update', $form->code) : route('forms.store');
     $title = ($type == 'edit') ? $form->title : '';
-    $description = ($type == 'edit') ? str_convert_line_breaks($form->description, false) : '';
+    $description = ($type == 'edit') ? str_replace(['<br>', '<br/>', '<br />'], "\n", $form->description) : '';
 @endphp
 
 <form id="forms" method="post" action="{{ $action }}" autocomplete="off">
@@ -9,14 +9,14 @@
     @csrf
 
     <div class="form-group{{ $errors->has('title') ? ' has-error' : '' }}">
-        <input type="text" class="form-control" id="title" name="title" placeholder="Form Title" value="{{ old('title') ?: $title }}" required>
+        <input type="text" class="form-control" id="title" name="title" placeholder="Título do formulário" value="{{ old('title') ?: $title }}" required>
         @if ($errors->has('title'))
             <span class="help-block">{{ $errors->first('title') }}</span>
         @endif
     </div>
 
     <div class="form-group{{ $errors->has('description') ? ' has-error' : '' }}">
-        <label for="description">Form Description: <span class="text-danger">*</span></label>
+        <label for="description">Descrição do formulário: <span class="text-danger">*</span></label>
 
         <textarea rows="2" cols="5" class="form-control elastic" id="description" name="description" required>{{ old('description') ?: $description }}</textarea>
         @if ($errors->has('description'))
@@ -25,7 +25,7 @@
     </div>
 
     <div class="text-right">
-        <button type="submit" id="submit" class="btn mt-20 btn-{{ ($type == 'edit') ? 'primary' : 'success' }}">{{ ($type == 'edit') ? 'Update' : 'Create' }}</button>
+        <button type="submit" id="submit" class="btn mt-20 btn-{{ ($type == 'edit') ? 'primary' : 'success' }}">{{ ($type == 'edit') ? 'Atualizar Formulário' : 'Criar Formulário' }}</button>
     </div>
 </form>
 
@@ -56,10 +56,10 @@
                 },
                 messages: {
                     title: {
-                        'required': 'The form title is required'
+                        'required': 'O título do formulário é obrigatório'
                     },
                     description: {
-                        'required': 'The form description is required'
+                        'required': 'A descrição do formulário é obrigatória'
                     },
                 },
             });

@@ -6,9 +6,9 @@
 
     <div class="panel panel-flat border-left-xlg border-left-primary">
         <div class="panel-heading">
-            <h4 class="panel-title text-semibold">My Forms</h4>
+            <h4 class="panel-title text-semibold">Meus formulários</h4>
             <div class="heading-elements">
-                <a href="{{ route('forms.create') }}" class="btn btn-success heading-btn">Create a Form</a>
+                <a href="{{ route('forms.create') }}" class="btn btn-success heading-btn">Crie um formulário</a>
             </div>
         </div>
     </div>
@@ -19,7 +19,7 @@
         @if ($forms->isEmpty())
             <div class="panel-body text-center">
                 <div class="mt-30 mb-30">
-                    <h6 class="text-semibold">You are yet to create any form</h6>
+                    <h6 class="text-semibold">Você ainda não criou nenhum formulário</h6>
                 </div>
             </div>
         @else
@@ -27,11 +27,11 @@
                 <thead>
                     <tr>
                         <th></th>
-                        <th>Form Title</th>
-                        <th class="text-center">Date Created</th>
-                        <th class="text-center">Role</th>
+                        <th>Título do formulário</th>
+                        <th class="text-center">Data de criação</th>
+                        <th class="text-center">Função</th>
                         <th class="text-center">Status</th>
-                        <th class="text-center">Actions</th>
+                        <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,13 +44,13 @@
                         <tr>
                             <td></td>
                             <td>{{ $form->title }}</td>
-                            <td class="text-center">{{ $form->created_at->format('jS F, Y') }}</td>
+                            <td class="text-center">{{ $form->created_at->format('d/m/Y') }}</td>
                             <td class="text-center"><span class="label label-flat border-{{ $role_symbol['color'] }} text-{{ $role_symbol['color'] }}-600">{{ $role_symbol['role'] }}</span></td>
                             <td class="text-center"><span class="label bg-{{ $symbol['color'] }}">{{ $symbol['label'] }}</span></td>
                             <td class="text-center">
-                                <a href="{{ route('forms.show', $form->code) }}" class="btn btn-xs btn-default mb-5">View</a>
-                                <a href="{{ route('forms.edit', $form->code) }}" class="btn btn-xs btn-primary mb-5 position-right">Edit</a>
-                                <a href="{{ route('forms.destroy', $form->code) }}" class="btn btn-xs btn-danger mb-5 position-right" data-id="{{ $form->code }}" data-method="delete" data-item="form" data-ajax="true">Delete</a>
+                                <a href="{{ route('forms.show', $form->code) }}" class="btn btn-xs btn-default mb-5">Visualizar</a>
+                                <a href="{{ route('forms.edit', $form->code) }}" class="btn btn-xs btn-primary mb-5 position-right">Editar</a>
+                                <a href="{{ route('forms.destroy', $form->code) }}" class="btn btn-xs btn-danger mb-5 position-right" data-id="{{ $form->code }}" data-method="delete" data-item="form" data-ajax="true">Excluir</a>
                             </td>
                         </tr>
                     @endforeach

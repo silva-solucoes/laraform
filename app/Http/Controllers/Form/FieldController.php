@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Form;
 
-use Auth;
-use Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Form;
 use App\FormField;
 use Illuminate\Http\Request;
@@ -11,17 +11,35 @@ use App\Http\Controllers\Controller;
 
 class FieldController extends Controller
 {
+    /**
+     * Verificar se o usuário tem permissão para acessar o formulário.
+     *
+     * @param Form $form
+     * @return bool
+     */
+    private function hasPermission(Form $form)
+    {
+        $current_user = Auth::user();
+        return $form && ($form->user_id === $current_user->id || $current_user->isFormCollaborator($form->id));
+    }
+
+    /**
+     * Armazenar um novo campo para o formulário.
+     *
+     * @param Request $request
+     * @param string $form
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request, $form)
     {
         if ($request->ajax()) {
             $form = Form::where('code', $form)->first();
 
-            $current_user = Auth::user();
-            if (!$form || ($form->user_id !== $current_user->id && !$current_user->isFormCollaborator($form->id))) {
+            if (!$this->hasPermission($form)) {
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  'Form is invalid',
+                    'error' => 'Form is invalid',
                 ]);
             }
 
@@ -36,7 +54,7 @@ class FieldController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  $errors->first()
+                    'error' => $errors->first()
                 ]);
             }
 
@@ -54,25 +72,31 @@ class FieldController extends Controller
                 'success' => true,
                 'data' => [
                     'field' => $field->id,
-                    'sub_template' => (get_form_templates($request->template))['sub_template'],
+                    'sub_template' => get_form_templates($request->template)['sub_template'] ?? null,
                     'attribute' => $attribute_prefix,
-                    'has_options' => (in_array($request->template, $templates->where('attribute_type', 'array')->pluck('alias')->all()))
+                    'has_options' => in_array($request->template, $templates->where('attribute_type', 'array')->pluck('alias')->all())
                 ]
             ]);
         }
     }
 
+    /**
+     * Remover um campo do formulário.
+     *
+     * @param Request $request
+     * @param string $form
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(Request $request, $form)
     {
         if ($request->ajax()) {
             $form = Form::where('code', $form)->first();
 
-            $current_user = Auth::user();
-            if (!$form || ($form->user_id !== $current_user->id && !$current_user->isFormCollaborator($form->id))) {
+            if (!$this->hasPermission($form)) {
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  'Form is invalid',
+                    'error' => 'Form is invalid',
                 ]);
             }
 
@@ -82,7 +106,7 @@ class FieldController extends Controller
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' =>  'Form field is invalid',
+                    'error' => 'Form field is invalid',
                 ]);
             }
 

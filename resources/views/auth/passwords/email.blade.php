@@ -12,7 +12,7 @@
             <div class="panel panel-body">
                 <div class="text-center">
                     <div class="icon-object border-warning text-warning"><i class="icon-spinner11"></i></div>
-                    <h5 class="content-group">Password recovery <small class="display-block">We'll send you instructions via email</small></h5>
+                    <h5 class="content-group">Recuperação de senha <small class="display-block">Enviaremos instruções por e-mail</small></h5>
                 </div>
 
                 @php $status = $status ?? null; @endphp
@@ -28,7 +28,7 @@
                     @endif
                 </div>
 
-                <button type="submit" class="btn bg-primary btn-block">Send Password Reset Link <i class="icon-arrow-right14 position-right"></i></button>
+                <button type="submit" class="btn bg-primary btn-block">Enviar link de redefinição de senha <i class="icon-arrow-right14 position-right"></i></button>
             </div>
         </div>
     </div>

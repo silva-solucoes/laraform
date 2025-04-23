@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Form;
 
-use Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Form;
-use Validator;
 use App\FormAvailability;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -15,34 +15,33 @@ class FormAvailabilityController extends Controller
     {
         if ($request->ajax()) {
             $current_user = Auth::user();
-
             $form = Form::where('code', $form)->first();
+
             if (!$form || $form->user_id !== $current_user->id) {
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_found',
-                    'error' => 'Form is invalid'
+                    'error' => 'Formulário inválido.'
                 ]);
             }
 
-            if (empty(array_filter($request->except('_token'), function ($value) { return $value !== null; }))) {
+            $hasData = array_filter($request->except('_token'), fn($value) => $value !== null);
+
+            if (empty($hasData)) {
                 return response()->json([
                     'success' => false,
                     'error_message' => 'validation_failed',
-                    'error' => 'The form availability settings has to be filled',
+                    'error' => 'As configurações de disponibilidade do formulário devem ser preenchidas.',
                 ]);
             }
 
             $request->merge([
-                'open_form_time' => isset($request->open_form_time) ? "{$request->open_form_time}:00" : null,
-                'close_form_time' => isset($request->close_form_time) ? "{$request->close_form_time}:00" : null,
-                'start_time' => isset($request->start_time) ? "{$request->start_time}:00" : null,
-                'end_time' => isset($request->end_time) ? "{$request->end_time}:00" : null,
-            ]);
-
-            $request->merge([
-                'open_form_at' => trim($request->open_form_date . ' ' . $request->open_form_time) ?: null,
-                'close_form_at' => trim($request->close_form_date . ' ' . $request->close_form_time) ?: null
+                'open_form_time' => $request->open_form_time ? "{$request->open_form_time}:00" : null,
+                'close_form_time' => $request->close_form_time ? "{$request->close_form_time}:00" : null,
+                'start_time' => $request->start_time ? "{$request->start_time}:00" : null,
+                'end_time' => $request->end_time ? "{$request->end_time}:00" : null,
+                'open_form_at' => trim("{$request->open_form_date} {$request->open_form_time}") ?: null,
+                'close_form_at' => trim("{$request->close_form_date} {$request->close_form_time}") ?: null,
             ]);
 
             $validator = Validator::make($request->all(), $this->generateValidationRules($request, $form));
@@ -63,11 +62,10 @@ class FormAvailabilityController extends Controller
             $availability->available_start_time = $request->start_time;
             $availability->available_end_time = $request->end_time;
             $availability->closed_form_message = $request->closed_form_message;
+
             $form->availability()->save($availability);
 
-            return response()->json([
-                'success' => true,
-            ]);
+            return response()->json(['success' => true]);
         }
     }
 
@@ -75,29 +73,27 @@ class FormAvailabilityController extends Controller
     {
         if (request()->ajax()) {
             $current_user = Auth::user();
-
             $form = Form::where('code', $form)->first();
+
             if (!$form || $form->user_id !== $current_user->id) {
                 return response()->json([
                     'success' => false,
                     'error_message' => 'not_found',
-                    'error' => 'Form is invalid'
+                    'error' => 'Formulário inválido.'
                 ]);
             }
 
-            if (!($availability = $form->availability)) {
+            if (!$form->availability) {
                 return response()->json([
                     'success' => false,
                     'error_message' => 'bad_request',
-                    'error' => 'Availability settings for this form is not set yet'
+                    'error' => 'As configurações de disponibilidade ainda não foram definidas para este formulário.'
                 ]);
             }
 
-            $availability->delete();
+            $form->availability->delete();
 
-            return response()->json([
-                'success' => true
-            ]);
+            return response()->json(['success' => true]);
         }
     }
 
@@ -105,31 +101,26 @@ class FormAvailabilityController extends Controller
     {
         $rules = [];
         $data = $request->all();
+        $availability = $form->availability;
 
         if ($data['open_form_date'] || $data['open_form_time'] || $data['close_form_at'] || $data['response_limit']) {
-            $form_availability = $form->availability;
-
-            //Make after:now rule apply to open_form_at if availability is new or it is to be changed
-            $rule_option = (optional($form_availability)->open_form_at === $data['open_form_at']) ? '' : '|after:now';
+            $ruleOption = (optional($availability)->open_form_at === $data['open_form_at']) ? '' : '|after:now';
 
             $rules['open_form_date'] = 'required|date';
             $rules['open_form_time'] = 'required|date_format:H:i:s';
-
-            $rules['open_form_at'] = "bail|date_format:Y-m-d H:i:s{$rule_option}";
+            $rules['open_form_at'] = "bail|date_format:Y-m-d H:i:s{$ruleOption}";
         }
 
         if ($data['open_form_at']) {
-            $rule_option = (!empty($data['response_limit'])) ? 'nullable' : 'required';
-
-            $rules['close_form_date'] = "{$rule_option}|date";
-            $rules['close_form_time'] = "{$rule_option}|date_format:H:i:s";
-
-            $rules['close_form_at'] = "bail|{$rule_option}|date_format:Y-m-d H:i:s|after:{$data['open_form_at']}";
+            $ruleOption = !empty($data['response_limit']) ? 'nullable' : 'required';
+            $rules['close_form_date'] = "{$ruleOption}|date";
+            $rules['close_form_time'] = "{$ruleOption}|date_format:H:i:s";
+            $rules['close_form_at'] = "bail|{$ruleOption}|date_format:Y-m-d H:i:s|after:{$data['open_form_at']}";
         }
 
         if ($data['open_form_at']) {
-            $rule_option = (!empty($data['close_form_at'])) ? 'nullable' : 'required';
-            $rules['response_limit'] = "{$rule_option}|integer|min:1|max:999999999";
+            $ruleOption = !empty($data['close_form_at']) ? 'nullable' : 'required';
+            $rules['response_limit'] = "{$ruleOption}|integer|min:1|max:999999999";
         }
 
         if ($data['start_time'] || $data['end_time']) {

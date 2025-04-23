@@ -2,35 +2,33 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\App;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Bootstrap any application services.
-     *
-     * @return void
+     * Register any application services.
      */
-    public function boot()
+    public function register(): void
     {
-        Schema::defaultStringLength(191);
-
-        Validator::extend('min_words', function ($attribute, $value, $parameters, $validator) {
-            $value = preg_replace('/<.*?>/', '', $value);
-            $length = $parameters[0];
-            return count(preg_split('/\s+/u', $value, null, PREG_SPLIT_NO_EMPTY)) >= $length;
-        });
+        //
     }
 
     /**
-     * Register any application services.
-     *
-     * @return void
+     * Bootstrap any application services.
      */
-    public function register()
+    public function boot(): void
     {
-        //
+        // Definir o idioma padrão como português do Brasil
+        App::setLocale('pt-BR');
+        
+        // Configurar o tamanho padrão de string para MySQL
+        \Illuminate\Support\Facades\Schema::defaultStringLength(191);
+
+        // Adicionar validador personalizado para contagem mínima de palavras
+        \Illuminate\Support\Facades\Validator::extend('min_words', function ($attribute, $value, $parameters, $validator) {
+            return min_words($value, $parameters[0] ?? 1);
+        });
     }
 }
